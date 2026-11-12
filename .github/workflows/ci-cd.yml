@@ -35,7 +35,7 @@ jobs:
   deploy:
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
-    runs-on: [self-hosted, lab]
+    runs-on: [self-hosted, Linux, X64]
     steps:
       - name: Deploy to lab
         run: |
