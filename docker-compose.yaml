@@ -23,8 +23,11 @@ services:
         condition: service_healthy
     environment:
       DB_HOST: db
-      DB_PORT: 5432
+      DB_PORT: "5432"
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
       POSTGRES_DB: ${POSTGRES_NAME}
+      POSTGRES_NAME: ${POSTGRES_NAME}
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
 
