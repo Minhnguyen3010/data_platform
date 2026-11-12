@@ -7,27 +7,42 @@ on:
     branches: [main]
   workflow_dispatch:
 
+concurrency:
+  group: ci-cd-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
           cache: pip
-      - run: pip install -r requirements.txt pytest
-      - run: pytest
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt pytest
+
+      - name: Run tests
+        run: python -m pytest
+        env:
+          PYTHONPATH: .
 
   deploy:
     needs: test
     if: github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
     runs-on: [self-hosted, lab]
     steps:
-      - name: Deploy
+      - name: Deploy to lab
         run: |
+          set -e
           cd ~/data_platform
           git pull --ff-only origin main
           docker compose up -d --build
+          docker compose up -d --no-deps --force-recreate app
           docker image prune -f
           docker compose ps -a
