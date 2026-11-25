@@ -1,18 +1,19 @@
 # data-platform
 
 Kho lưu trữ các bài thực hành Data Engineering, được tổ chức theo các giai đoạn
-học tập. Hiện tại chỉ `1.3_python_data_processing` có chương trình và unit test;
-các giai đoạn còn lại được tạo sẵn thư mục để bổ sung sau.
+học tập. Các giai đoạn đầu bao gồm thực hành PostgreSQL và Python; những giai đoạn
+tiếp theo được bổ sung dần theo lộ trình.
 
 ## Cấu trúc
 
 ```text
 data-platform/
-├── 1.2_sql_postgresql/
+├── 1.2_sql/
 │   ├── schema/
 │   ├── data/
 │   ├── queries/
-│   └── performance/
+│   ├── performance/
+│   └── README.md
 ├── 1.3_python_data_processing/
 │   ├── src/
 │   │   ├── main.py
@@ -84,6 +85,12 @@ python -m pytest
 
 Test không gọi Internet và không yêu cầu PostgreSQL đang chạy.
 
+## Thực hành SQL
+
+Phần [1.2_sql](1.2_sql/README.md) có schema PostgreSQL cho nhân viên và đơn
+hàng, dữ liệu mẫu, 40 câu SQL, cùng benchmark execution plan trước/sau index.
+Xem hướng dẫn chạy và giải thích mô hình trong README của module.
+
 ## PostgreSQL bằng Docker Compose
 
 Điền các biến PostgreSQL và pgAdmin trong `.env`, sau đó từ thư mục gốc chạy:
@@ -96,9 +103,8 @@ Compose chạy PostgreSQL, chương trình Python và pgAdmin. Log ứng dụng 
 vào `1.3_python_data_processing/logs/`. pgAdmin được mở tại
 `http://localhost:8080`.
 
-## Giai đoạn chưa triển khai
+## Giai đoạn đang bổ sung
 
-Các thư mục trong `1.2_sql_postgresql`, `1.5_data_ingestion`,
-`2.1_data_modeling_dw`, `2.2_etl_elt_incremental_load` và `2.3_cdc_airbyte`
-hiện chỉ là khung thư mục; chưa có DDL, dữ liệu mẫu, pipeline hay cấu hình
-Airbyte.
+Các thư mục trong `1.5_data_ingestion`, `2.1_data_modeling_dw`,
+`2.2_etl_elt_incremental_load` và `2.3_cdc_airbyte` hiện là khung để phát
+triển tiếp.
