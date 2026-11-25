@@ -17,10 +17,14 @@ services:
       retries: 10
 
   app:
-    build: .
+    build:
+      context: ../../1.3_python_data_processing
+      dockerfile: Dockerfile
     depends_on:
       db:
         condition: service_healthy
+    volumes:
+      - ../../1.3_python_data_processing/logs:/app/logs
     environment:
       DB_HOST: db
       DB_PORT: "5432"

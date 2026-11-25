@@ -23,14 +23,15 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+          cache-dependency-path: 1.3_python_data_processing/requirements.txt
 
       - name: Install dependencies
-        run: pip install -r requirements.txt pytest
+        run: pip install -r 1.3_python_data_processing/requirements.txt
 
       - name: Run tests
         run: python -m pytest
         env:
-          PYTHONPATH: .
+          PYTHONPATH: 1.3_python_data_processing/src
 
   deploy:
     needs: test
@@ -42,7 +43,8 @@ jobs:
           set -e
           cd ~/data_platform
           git pull --ff-only origin main
-          docker compose up -d --build
-          docker compose up -d --no-deps --force-recreate app
+          compose_file=1.4_linux_git_docker/docker/docker-compose.yml
+          docker compose -f "$compose_file" up -d --build
+          docker compose -f "$compose_file" up -d --no-deps --force-recreate app
           docker image prune -f
-          docker compose ps -a
+          docker compose -f "$compose_file" ps -a

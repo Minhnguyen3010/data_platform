@@ -1,122 +1,104 @@
-# GitHub Commits Ingestion
+# data-platform
 
-Project thực hành Data Engineering: REST API JSON -> transform -> PostgreSQL.
+Kho lưu trữ các bài thực hành Data Engineering, được tổ chức theo các giai đoạn
+học tập. Hiện tại chỉ `1.3_python_data_processing` có chương trình và unit test;
+các giai đoạn còn lại được tạo sẵn thư mục để bổ sung sau.
 
-## Công nghệ
+## Cấu trúc
 
-- Python 3.10+ (khuyến nghị 3.12)
-- GitHub REST API công khai
-- PostgreSQL + psycopg 3
-- requests, python-dotenv, pytest
-
-## 1. Chuẩn bị PostgreSQL
-
-Project đang cấu hình `.env` với:
-- Host: `localhost`
-- Port: `5432`
-- Database: `data_platform`
-- User: `data_platform`
-
-Đảm bảo PostgreSQL đã có database và user tương ứng, user có quyền tạo bảng trong database.
-Nếu database chưa tồn tại, đăng nhập bằng tài khoản quản trị PostgreSQL và chạy:
-
-```sql
-CREATE USER data_platform WITH PASSWORD 'abcd123';
-CREATE DATABASE data_platform OWNER data_platform;
+```text
+data-platform/
+├── 1.2_sql_postgresql/
+│   ├── schema/
+│   ├── data/
+│   ├── queries/
+│   └── performance/
+├── 1.3_python_data_processing/
+│   ├── src/
+│   │   ├── main.py
+│   │   └── de_project/
+│   ├── tests/
+│   ├── logs/
+│   ├── Dockerfile
+│   └── requirements.txt
+├── 1.4_linux_git_docker/
+│   ├── docker/docker-compose.yml
+│   └── scripts/
+├── 1.5_data_ingestion/
+│   ├── src/
+│   ├── tests/
+│   └── logs/
+├── 2.1_data_modeling_dw/
+│   ├── ddl/
+│   ├── scd2/
+│   ├── reports/
+│   └── docs/
+├── 2.2_etl_elt_incremental_load/
+│   ├── sql/
+│   ├── scripts/
+│   ├── reconciliation/
+│   └── docs/
+├── 2.3_cdc_airbyte/
+│   ├── airbyte/
+│   ├── sql/
+│   ├── reconciliation/
+│   └── docs/
+├── .env.example
+└── pytest.ini
 ```
 
-Nếu user/database đã tồn tại thì không cần chạy lại. Nếu PostgreSQL của bạn không ở localhost,
-hãy sửa `DB_HOST` trong `.env` cho đúng địa chỉ máy chủ.
+## Chạy phần Python hiện có
 
-## 2. Cài đặt môi trường Python
+Yêu cầu Python 3.10+ (khuyến nghị 3.12) và PostgreSQL.
 
-Windows PowerShell:
+Tạo môi trường ảo ở thư mục gốc:
+
 ```powershell
 py -3.12 -m venv .venv
-.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+.\.venv\Scripts\Activate.ps1
+pip install -r 1.3_python_data_processing\requirements.txt
 ```
 
-Ubuntu / WSL:
 ```bash
 python3.12 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r 1.3_python_data_processing/requirements.txt
 ```
 
-## 3. Cấu hình
-
-File `.env` đã được tạo sẵn theo thông tin database bạn cung cấp.
-File `.env` được khai báo trong `.gitignore`, không push file này lên GitHub.
-Nếu host/port PostgreSQL khác, sửa lại trong `.env`.
-
-## 4. Chạy pipeline
+Tạo `.env` từ `.env.example` nếu chưa có và điền thông tin PostgreSQL. Không
+commit `.env`. Chạy pipeline từ thư mục gốc:
 
 ```bash
-python main.py
+python 1.3_python_data_processing/src/main.py
 ```
 
-API:
-`https://api.github.com/repos/psf/requests/commits`
+Pipeline lấy commit từ GitHub REST API, chuẩn hóa timestamp về UTC, bỏ qua
+record không hợp lệ, tạo bảng `github_commits` và upsert theo `sha`. Log được
+lưu tại `1.3_python_data_processing/logs/ingestion.log`.
 
-Pipeline sẽ:
-1. Gọi API lấy JSON.
-2. Retry khi HTTP 429 hoặc timeout/connection error.
-3. Chuẩn hóa timestamp thành UTC.
-4. Bỏ qua record thiếu SHA, message hoặc ngày tháng không hợp lệ.
-5. Tạo bảng `github_commits` nếu chưa có.
-6. UPSERT theo `sha` (PRIMARY KEY).
-
-## 5. Kiểm tra dữ liệu và idempotency
-
-Chạy `python main.py` hai lần liên tiếp, sau đó chạy SQL:
-
-```sql
-SELECT COUNT(*) FROM github_commits;
-
-SELECT sha, COUNT(*)
-FROM github_commits
-GROUP BY sha
-HAVING COUNT(*) > 1;
-```
-
-Truy vấn thứ hai phải trả về 0 dòng. Số lượng dòng không tăng khi chạy lại cùng tập commit.
-`ON CONFLICT (sha) DO UPDATE` cập nhật bản ghi đã tồn tại thay vì tạo dòng mới.
-
-## 6. Unit test
+Chạy unit test từ thư mục gốc:
 
 ```bash
-pytest -v
+python -m pytest
 ```
 
-Test mô phỏng API thành công, 429, timeout, retry hết lượt và dữ liệu lỗi.
-Test không gọi Internet và không cần PostgreSQL thật.
+Test không gọi Internet và không yêu cầu PostgreSQL đang chạy.
 
-## 7. Cấu trúc thư mục
+## PostgreSQL bằng Docker Compose
 
-```text
-github_commits_de_project/
-├── de_project/
-│   ├── __init__.py
-│   ├── api.py
-│   ├── config.py
-│   ├── db.py
-│   ├── exceptions.py
-│   ├── pipeline.py
-│   └── transform.py
-├── tests/
-│   ├── test_api.py
-│   └── test_transform.py
-├── .env
-├── .env.example
-├── .gitignore
-├── main.py
-├── requirements.txt
-└── README.md
+Điền các biến PostgreSQL và pgAdmin trong `.env`, sau đó từ thư mục gốc chạy:
+
+```bash
+docker compose --env-file .env -f 1.4_linux_git_docker/docker/docker-compose.yml up --build
 ```
 
-## 8. Lưu ý bảo mật
+Compose chạy PostgreSQL, chương trình Python và pgAdmin. Log ứng dụng được gắn
+vào `1.3_python_data_processing/logs/`. pgAdmin được mở tại
+`http://localhost:8080`.
 
-`.env` trong project này được tạo sẵn theo thông tin bạn cung cấp để tiện chạy local.
-Không commit hoặc gửi file `.env` lên GitHub. Mật khẩu đã xuất hiện trong cuộc trò chuyện,
-nên nếu đây là mật khẩu đang dùng cho hệ thống thật, bạn nên đổi sang mật khẩu riêng.
+## Giai đoạn chưa triển khai
+
+Các thư mục trong `1.2_sql_postgresql`, `1.5_data_ingestion`,
+`2.1_data_modeling_dw`, `2.2_etl_elt_incremental_load` và `2.3_cdc_airbyte`
+hiện chỉ là khung thư mục; chưa có DDL, dữ liệu mẫu, pipeline hay cấu hình
+Airbyte.
