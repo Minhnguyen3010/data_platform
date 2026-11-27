@@ -41,11 +41,17 @@ data-platform/
 │   ├── 05_pipeline_reliability/
 │   ├── 06_airbyte_mysql_to_postgres/
 │   └── README.md
-├── 2.3_cdc_airbyte/
-│   ├── airbyte/
-│   ├── sql/
-│   ├── reconciliation/
-│   └── docs/
+├── 3.1_airflow/
+│   ├── 01_taskflow/
+│   ├── 02_data_intervals/
+│   ├── 03_backfill/
+│   ├── 04_assets/
+│   ├── 05_reliability/
+│   ├── 06_connections_secrets/
+│   ├── 07_observability/
+│   ├── 08_idempotency/
+│   ├── 09_end_to_end/
+│   └── README.md
 ├── .env.example
 └── pytest.ini
 ```
@@ -113,6 +119,40 @@ docker compose --env-file .env -f 1.4_linux_git_docker/docker/docker-compose.yml
 MySQL được mở trên `localhost:3307`; PostgreSQL dùng `localhost:5432`. Airbyte
 được cài riêng bằng `abctl`, không chạy như một service Compose.
 
+## Airflow 3.1 bằng Docker Compose
+
+Stack Airflow dùng CeleryExecutor với một worker, PostgreSQL metadata DB và
+Redis riêng; nó chỉ chạy khi bật profile `airflow`, nên các lệnh Compose cũ
+không tự khởi động Airflow. Đây là môi trường luyện tập một máy, không có HA.
+
+Nếu chưa có `.env`, copy `.env.example` rồi tạo giá trị riêng cho các biến
+Airflow secret; nếu đã có `.env`, giữ nguyên credential hiện tại và chỉ bổ
+sung các biến Airflow còn thiếu. Không commit `.env`.
+
+Từ thư mục gốc chạy:
+
+```powershell
+docker compose --env-file .env --profile airflow -f 1.4_linux_git_docker\docker\docker-compose.yml up -d airflow-apiserver airflow-scheduler airflow-dag-processor airflow-worker airflow-triggerer
+```
+
+Mở `http://localhost:8081`; thông tin đăng nhập là
+`AIRFLOW_ADMIN_USERNAME` và `AIRFLOW_ADMIN_PASSWORD` trong `.env`. API server
+chỉ được publish trên localhost. Các DAG trong
+[3.1_airflow](3.1_airflow/README.md) được mount tự động.
+
+Kiểm tra container và log:
+
+```powershell
+docker compose --env-file .env --profile airflow -f 1.4_linux_git_docker\docker\docker-compose.yml ps
+docker compose --env-file .env --profile airflow -f 1.4_linux_git_docker\docker\docker-compose.yml logs -f airflow-apiserver
+```
+
+Để dừng Airflow mà không xóa metadata, log hoặc output:
+
+```powershell
+docker compose --env-file .env --profile airflow -f 1.4_linux_git_docker\docker\docker-compose.yml stop airflow-apiserver airflow-scheduler airflow-dag-processor airflow-worker airflow-triggerer airflow-db airflow-redis
+```
+
 ## Mô hình hóa dữ liệu kho (2.1)
 
 Phần [2.1_data_modeling_dw](2.1_data_modeling_dw/README.md) thực hành star
@@ -121,4 +161,6 @@ lịch sử địa chỉ khách hàng theo SCD Type 2 và báo cáo doanh thu th
 sản phẩm, khu vực. Phần
 [2.2_etl_elt_ingestion_cdc](2.2_etl_elt_ingestion_cdc/README.md) gồm các lab
 ETL, ELT, incremental load, CDC, độ tin cậy pipeline và lab Airbyte đồng bộ
-MySQL sang PostgreSQL. `2.3_cdc_airbyte` hiện là khung để phát triển tiếp.
+MySQL sang PostgreSQL. Phần [3.1_airflow](3.1_airflow/README.md) là lộ trình
+thực hành orchestration với Apache Airflow 3.1, từ TaskFlow DAG đến vận hành
+pipeline theo data interval và asset.
