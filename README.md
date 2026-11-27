@@ -14,7 +14,7 @@ data-platform/
 │   ├── queries/
 │   ├── performance/
 │   └── README.md
-├── 1.3_python_data_processing/
+├── 1.3_python/
 │   ├── src/
 │   │   ├── main.py
 │   │   └── de_project/
@@ -25,20 +25,22 @@ data-platform/
 ├── 1.4_linux_git_docker/
 │   ├── docker/docker-compose.yml
 │   └── scripts/
-├── 1.5_data_ingestion/
-│   ├── src/
-│   ├── tests/
-│   └── logs/
 ├── 2.1_data_modeling_dw/
 │   ├── ddl/
+│   ├── data/
 │   ├── scd2/
 │   ├── reports/
-│   └── docs/
-├── 2.2_etl_elt_incremental_load/
-│   ├── sql/
-│   ├── scripts/
-│   ├── reconciliation/
-│   └── docs/
+│   ├── docs/
+│   └── README.md
+├── 2.2_etl_elt_ingestion_cdc/
+│   ├── 01_etl_batch/
+│   ├── 02_elt_warehouse/
+│   ├── 03_incremental_load/
+│   ├── 04_cdc/query_based/
+│   ├── 04_cdc/postgres_logical_replication/
+│   ├── 05_pipeline_reliability/
+│   ├── 06_airbyte_mysql_to_postgres/
+│   └── README.md
 ├── 2.3_cdc_airbyte/
 │   ├── airbyte/
 │   ├── sql/
@@ -57,25 +59,25 @@ Tạo môi trường ảo ở thư mục gốc:
 ```powershell
 py -3.12 -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -r 1.3_python_data_processing\requirements.txt
+pip install -r 1.3_python\requirements.txt
 ```
 
 ```bash
 python3.12 -m venv .venv
 source .venv/bin/activate
-pip install -r 1.3_python_data_processing/requirements.txt
+pip install -r 1.3_python/requirements.txt
 ```
 
 Tạo `.env` từ `.env.example` nếu chưa có và điền thông tin PostgreSQL. Không
 commit `.env`. Chạy pipeline từ thư mục gốc:
 
 ```bash
-python 1.3_python_data_processing/src/main.py
+python 1.3_python/src/main.py
 ```
 
 Pipeline lấy commit từ GitHub REST API, chuẩn hóa timestamp về UTC, bỏ qua
 record không hợp lệ, tạo bảng `github_commits` và upsert theo `sha`. Log được
-lưu tại `1.3_python_data_processing/logs/ingestion.log`.
+lưu tại `1.3_python/logs/ingestion.log`.
 
 Chạy unit test từ thư mục gốc:
 
@@ -100,11 +102,25 @@ docker compose --env-file .env -f 1.4_linux_git_docker/docker/docker-compose.yml
 ```
 
 Compose chạy PostgreSQL, chương trình Python và pgAdmin. Log ứng dụng được gắn
-vào `1.3_python_data_processing/logs/`. pgAdmin được mở tại
+vào `1.3_python/logs/`. pgAdmin được mở tại
 `http://localhost:8080`.
 
-## Giai đoạn đang bổ sung
+Lab Airbyte dùng lại PostgreSQL và bật thêm MySQL từ cùng Compose bằng profile
+`airbyte`. Thêm các biến `MYSQL_*` vào `.env`, sau đó chỉ khởi động hai database:
 
-Các thư mục trong `1.5_data_ingestion`, `2.1_data_modeling_dw`,
-`2.2_etl_elt_incremental_load` và `2.3_cdc_airbyte` hiện là khung để phát
-triển tiếp.
+```powershell
+docker compose --env-file .env --profile airbyte -f 1.4_linux_git_docker/docker/docker-compose.yml up -d db mysql
+```
+
+MySQL được mở trên `localhost:3307`; PostgreSQL dùng `localhost:5432`. Airbyte
+được cài riêng bằng `abctl`, không chạy như một service Compose.
+
+## Mô hình hóa dữ liệu kho (2.1)
+
+Phần [2.1_data_modeling_dw](2.1_data_modeling_dw/README.md) thực hành star
+schema với `dim_customer`, `dim_product`, `dim_date` và `fact_sales`; gồm nạp
+lịch sử địa chỉ khách hàng theo SCD Type 2 và báo cáo doanh thu theo tháng,
+sản phẩm, khu vực. Phần
+[2.2_etl_elt_ingestion_cdc](2.2_etl_elt_ingestion_cdc/README.md) gồm các lab
+ETL, ELT, incremental load, CDC, độ tin cậy pipeline và lab Airbyte đồng bộ
+MySQL sang PostgreSQL. `2.3_cdc_airbyte` hiện là khung để phát triển tiếp.

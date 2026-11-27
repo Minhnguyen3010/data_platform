@@ -1,0 +1,4 @@
+event_id,customer_id,amount
+evt-001,C-001,12.50
+evt-002,C-002,not-a-number
+evt-001,C-001,15.00

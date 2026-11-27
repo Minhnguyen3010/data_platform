@@ -1,0 +1,4 @@
+order_id,line_number,sold_at,customer_id,product_id,quantity,unit_price
+O-100,1,2024-05-01T10:00:00+00:00,c-001,p-101,2,45.00
+O-101,1,2024-05-02T11:30:00+00:00,c-002,p-102,3,12.50
+O-102,1,not-a-timestamp,c-003,p-103,1,9.99
