@@ -121,7 +121,7 @@ file database lab khi muốn bắt đầu lại.
 ### 06 — Airbyte MySQL sang PostgreSQL
 
 Xem [hướng dẫn Airbyte HRM](06_airbyte_mysql_to_postgres/README.md). Lab bật
-service MySQL bằng profile `airbyte` trong Compose hiện có, cài Airbyte bằng
+service MySQL mặc định trong Compose hiện có, cài Airbyte bằng
 `abctl`, cấu hình Source/Destination/Connection trên UI và chạy các khối trong
 một file SQL theo thứ tự có sync xen giữa.
 

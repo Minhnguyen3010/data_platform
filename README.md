@@ -95,21 +95,19 @@ Xem hướng dẫn chạy và giải thích mô hình trong README của module.
 
 ## PostgreSQL bằng Docker Compose
 
-Điền các biến PostgreSQL và pgAdmin trong `.env`, sau đó từ thư mục gốc chạy:
+Điền các biến PostgreSQL, pgAdmin và MySQL trong `.env`, sau đó từ thư mục gốc chạy:
 
 ```bash
 docker compose --env-file .env -f 1.4_linux_git_docker/docker/docker-compose.yml up --build
 ```
 
-Compose chạy PostgreSQL, chương trình Python và pgAdmin. Log ứng dụng được gắn
-vào `1.3_python/logs/`. pgAdmin được mở tại
-`http://localhost:8080`.
+Compose chạy PostgreSQL, MySQL, chương trình Python và pgAdmin. Log ứng dụng
+được gắn vào `1.3_python/logs/`. pgAdmin được mở tại `http://localhost:8080`.
 
-Lab Airbyte dùng lại PostgreSQL và bật thêm MySQL từ cùng Compose bằng profile
-`airbyte`. Thêm các biến `MYSQL_*` vào `.env`, sau đó chỉ khởi động hai database:
+Lab Airbyte dùng lại hai database này. Để chỉ khởi động PostgreSQL và MySQL:
 
 ```powershell
-docker compose --env-file .env --profile airbyte -f 1.4_linux_git_docker/docker/docker-compose.yml up -d db mysql
+docker compose --env-file .env -f 1.4_linux_git_docker/docker/docker-compose.yml up -d db mysql
 ```
 
 MySQL được mở trên `localhost:3307`; PostgreSQL dùng `localhost:5432`. Airbyte

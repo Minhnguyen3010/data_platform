@@ -11,7 +11,7 @@ Thêm các biến MySQL từ `.env.example` vào `.env` ở thư mục gốc. T�
 local riêng và không commit `.env`. Từ thư mục gốc chạy:
 
 ```powershell
-docker compose --env-file .env --profile airbyte -f 1.4_linux_git_docker/docker/docker-compose.yml up -d db mysql
+docker compose --env-file .env -f 1.4_linux_git_docker/docker/docker-compose.yml up -d db mysql
 ```
 
 Kết nối Workbench tới MySQL bằng `127.0.0.1:3307`; database là `HRM`. PostgreSQL
